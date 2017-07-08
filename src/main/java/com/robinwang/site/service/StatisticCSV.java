@@ -20,7 +20,7 @@ public class StatisticCSV {
     private static Logger LOG = LoggerFactory.getLogger(StatisticCSV.class);
     private static String newLine = System.getProperty("line.separator");
 
-    public void readCSV() throws Exception, IOException {
+    public void readCSV() throws Exception {
         LOG.info("enter readCSV");
 
         Path path = new File("/Users/robin/wangxp/5.csv").toPath();
@@ -36,38 +36,46 @@ public class StatisticCSV {
 
         table.remove(0);
 
-        Set<String> people1 = table.stream().map(line -> line[8]).flatMap(x -> Arrays.stream(x.split("、"))).collect(Collectors.toSet());
-        Set<String> people2 = table.stream().map(line -> line[9]).collect(Collectors.toSet());
-        Set<String> people3 = table.stream().map(line -> line[10]).collect(Collectors.toSet());
-        Set<String> people4 = table.stream().map(line -> line[11]).collect(Collectors.toSet());
-
-
         Set<String> people = new HashSet<>();
-        people.addAll(people1);
-        people.addAll(people2);
-        people.addAll(people3);
+        people.addAll(table.stream().map(line -> line[8]).flatMap(x -> Arrays.stream(x.split("、"))).collect(Collectors.toSet()));
+        people.addAll(table.stream().map(line -> line[9]).flatMap(x -> Arrays.stream(x.split("、"))).collect(Collectors.toSet()));
+        people.addAll(table.stream().map(line -> line[10]).flatMap(x -> Arrays.stream(x.split("、"))).collect(Collectors.toSet()));
+        people.addAll(table.stream().map(line -> line[11]).flatMap(x -> Arrays.stream(x.split("、"))).collect(Collectors.toSet()));
 
         people = people.stream().filter(x -> x.trim().length() > 0).collect(Collectors.toSet());
-        String header = "客户案号,基本法律状态,字数,翻译人,第一校对人,第二校对人,检查" + newLine;
+        people.forEach(System.out::println);
+
+        String header = "公司案号,客户案号,基本法律状态,字数,翻译人,第一校对人,第二校对人,检查";
         for (String name : people) {
 
-            List<String> personData = table.stream().filter(line -> name.equals(line[8])).map(line -> line[0] + "," + line[3] + "," + line[7] + "," + name + ",,,").collect(Collectors.toList());
-            personData.addAll(table.stream().filter(line -> name.equals(line[9])).map(line -> line[0] + "," + line[3] + "," + line[7] + ",," + name + ",,").collect(Collectors.toList()));
-            personData.addAll(table.stream().filter(line -> name.equals(line[10])).map(line -> line[0] + "," + line[3] + "," + line[7] + ",,," + name+",").collect(Collectors.toList()));
-            personData.addAll(table.stream().filter(line -> name.equals(line[11])).map(line -> line[0] + "," + line[3] + "," + line[7] + ",,,," + name).collect(Collectors.toList()));
+            List<String> personData = table.stream().filter(line -> line[8].contains(name)).map(line -> line[0] + "," + line[2] + "," + line[3] + "," + line[7] + "," + name + ",,,").collect(Collectors.toList());
+            personData.addAll(table.stream().filter(line -> line[9].contains(name)).map(line -> line[0] + "," + line[2] + "," + line[3] + "," + line[7] + ",," + name + ",,").collect(Collectors.toList()));
+            personData.addAll(table.stream().filter(line -> line[10].contains(name)).map(line -> line[0] + "," + line[2] + "," + line[3] + "," + line[7] + ",,," + name + ",").collect(Collectors.toList()));
+            personData.addAll(table.stream().filter(line -> line[11].contains(name)).map(line -> line[0] + "," + line[2] + "," + line[3] + "," + line[7] + ",,,," + name).collect(Collectors.toList()));
 
-            personData.forEach(System.out::println);
+//            personData.forEach(System.out::println);
 
+            int tran = table.stream().filter(line -> name.equals(line[8])).filter(line -> line[7].trim().length() > 0).map(line -> Integer.parseInt(line[7])).mapToInt(Integer::intValue).sum();
+            int v1 = table.stream().filter(line -> name.equals(line[9])).filter(line -> line[7].trim().length() > 0).map(line -> Integer.parseInt(line[7])).mapToInt(Integer::intValue).sum();
+            int v2 = table.stream().filter(line -> name.equals(line[10])).filter(line -> line[7].trim().length() > 0).map(line -> Integer.parseInt(line[7])).mapToInt(Integer::intValue).sum();
+            int check = table.stream().filter(line -> name.equals(line[11])).filter(line -> line[7].trim().length() > 0).map(line -> Integer.parseInt(line[7])).mapToInt(Integer::intValue).sum();
 
             String outPath = "/Users/robin/wangxp/" + name + ".csv";
 
             FileOutputStream fos = new FileOutputStream(outPath);
-            fos.write(header.getBytes("UTF-8"));
+            wf(fos, header);
             for (String line : personData) {
-                String s = line + newLine;
-                fos.write(s.getBytes("UTF-8"));
-//                fw.write(new String(line + newLine, "GBK"));
+                wf(fos, line);
             }
+
+            String sTran = "翻译字数," + tran + newLine;
+            String sRevision = "校对字数," + (v1 + v2) + newLine;
+            String sCheck = "检查字数," + check + newLine;
+
+            wf(fos, sTran);
+            wf(fos, sRevision);
+            wf(fos, sCheck);
+
             fos.close();
 //            fw.close();
 
@@ -79,4 +87,17 @@ public class StatisticCSV {
 
     }
 
+    private void wf(FileOutputStream fos, String s) throws Exception {
+        if (!s.endsWith(newLine)) s = s + newLine;
+        fos.write(s.getBytes("UTF-8"));
+    }
+
+    private int sumList(List<String> list) {
+        int ret = 0;
+        for (String k : list) {
+            ret += Integer.parseInt(k);
+        }
+
+        return ret;
+    }
 }
