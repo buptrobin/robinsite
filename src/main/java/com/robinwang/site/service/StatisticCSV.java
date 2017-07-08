@@ -6,8 +6,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.file.Files;
+ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -29,9 +28,7 @@ public class StatisticCSV {
         ArrayList<String[]> table = new ArrayList<>(100);
         for (String line : content) {
             String[] k = line.split(",", -1);
-//            System.out.println(line);
             table.add(k);
-//            System.out.println(k.length);
         }
 
         table.remove(0);
