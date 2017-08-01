@@ -19,14 +19,14 @@ public class StatisticCSV {
     private static Logger LOG = LoggerFactory.getLogger(StatisticCSV.class);
     private static String newLine = System.getProperty("line.separator");
 
-    private static final int GONG_SI_AN_HAO = 0; //公司案号
-    private static final int KE_HU_AN_HAO = 2; //客户案号
-    private static final int JI_BEN_FA_LV_ZHUANG_TAI = 3; //基本法律状态
-    private static final int ZI_SHU = 4; //字数
-    private static final int FAN_YI_REN = 7; //翻译人
-    private static final int DI_YI_JIAO_DUI_REN = 8; //第一校对人
-    private static final int DI_ER_JIAO_DUI_REN = 9; //第二校对人
-    private static final int JIAN_CHA = 10; //检查
+    private static int GONG_SI_AN_HAO = 0; //公司案号
+    private static int KE_HU_AN_HAO = 2; //客户案号
+    private static int JI_BEN_FA_LV_ZHUANG_TAI = 3; //基本法律状态
+    private static int ZI_SHU = 4; //字数
+    private static int FAN_YI_REN = 7; //翻译人
+    private static int DI_YI_JIAO_DUI_REN = 8; //第一校对人
+    private static int DI_ER_JIAO_DUI_REN = 9; //第二校对人
+    private static int JIAN_CHA = 10; //检查
 
     /**
      * May:
@@ -38,7 +38,7 @@ public class StatisticCSV {
      * 9: 第一校对人
      * 10: 第二校对人
      * 11: 检查
-     *
+     * <p>
      * June:
      * 0: 公司案号
      * 2: 客户案号
@@ -61,15 +61,34 @@ public class StatisticCSV {
             table.add(k);
         }
 
+        String[] title = table.get(0);
+        Map<String, Integer> mapName2Index = new HashMap<>();
+        for (int i = 0; i < title.length; i++) {
+            mapName2Index.put(title[i].trim(), i);
+        }
+
+        GONG_SI_AN_HAO = mapName2Index.get("公司案号");
+        KE_HU_AN_HAO = mapName2Index.get("客户案号");
+        JI_BEN_FA_LV_ZHUANG_TAI = mapName2Index.get("基本法律状态");
+        ZI_SHU = mapName2Index.get("字数");
+        FAN_YI_REN = mapName2Index.get("翻译人");
+        DI_YI_JIAO_DUI_REN = mapName2Index.get("第一校对人");
+        DI_ER_JIAO_DUI_REN = mapName2Index.get("第二校对人");
+        JIAN_CHA = mapName2Index.get("检查");
+
         table.remove(0);
 
         Set<String> people = new HashSet<>();
         people.addAll(table.stream().map(line -> line[FAN_YI_REN]).flatMap(x -> Arrays.stream(x.split("、"))).collect(Collectors.toSet()));
+
         people.addAll(table.stream().map(line -> line[DI_YI_JIAO_DUI_REN]).flatMap(x -> Arrays.stream(x.split("、"))).collect(Collectors.toSet()));
+
         people.addAll(table.stream().map(line -> line[DI_ER_JIAO_DUI_REN]).flatMap(x -> Arrays.stream(x.split("、"))).collect(Collectors.toSet()));
+
         people.addAll(table.stream().map(line -> line[JIAN_CHA]).flatMap(x -> Arrays.stream(x.split("、"))).collect(Collectors.toSet()));
 
         people = people.stream().filter(x -> x.trim().length() > 0).collect(Collectors.toSet());
+        
         people.forEach(System.out::println);
 
         String header = "公司案号,客户案号,基本法律状态,字数,翻译人,第一校对人,第二校对人,检查";
