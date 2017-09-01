@@ -28,6 +28,8 @@ public class StatisticCSV {
     private static int DI_ER_JIAO_DUI_REN = 9; //第二校对人
     private static int JIAN_CHA = 10; //检查
 
+    private static String DIRECTORY = "/Users/robin/wangxp/8";
+
     /**
      * May:
      * 0: 公司案号
@@ -52,7 +54,7 @@ public class StatisticCSV {
     public void readCSV() throws Exception {
         LOG.info("enter readCSV");
 
-        Path path = new File("/Users/robin/wangxp/6/6.csv").toPath();
+        Path path = new File(DIRECTORY + "/8.csv").toPath();
         List<String> content = Files.readAllLines(path);
 
         ArrayList<String[]> table = new ArrayList<>(100);
@@ -64,7 +66,7 @@ public class StatisticCSV {
         String[] title = table.get(0);
         Map<String, Integer> mapName2Index = new HashMap<>();
         for (int i = 0; i < title.length; i++) {
-            mapName2Index.put(title[i].trim(), i);
+            mapName2Index.put(title[i].trim().replace("\uFEFF", ""), i);
         }
 
         GONG_SI_AN_HAO = mapName2Index.get("公司案号");
@@ -79,7 +81,7 @@ public class StatisticCSV {
         table.remove(0);
 
         Set<String> people = new HashSet<>();
-        people.addAll(table.stream().map(line -> line[FAN_YI_REN]).flatMap(x -> Arrays.stream(x.split("、"))).collect(Collectors.toSet()));
+        people.addAll(table.stream().map(line -> line[FAN_YI_REN].replaceAll("；", "、")).flatMap(x -> Arrays.stream(x.split("、"))).collect(Collectors.toSet()));
 
         people.addAll(table.stream().map(line -> line[DI_YI_JIAO_DUI_REN]).flatMap(x -> Arrays.stream(x.split("、"))).collect(Collectors.toSet()));
 
@@ -87,12 +89,17 @@ public class StatisticCSV {
 
         people.addAll(table.stream().map(line -> line[JIAN_CHA]).flatMap(x -> Arrays.stream(x.split("、"))).collect(Collectors.toSet()));
 
-        people = people.stream().filter(x -> x.trim().length() > 0).collect(Collectors.toSet());
-        
+        people = people.stream().map(String::trim).filter(x -> x.length() > 0).collect(Collectors.toSet());
+
         people.forEach(System.out::println);
 
         String header = "公司案号,客户案号,基本法律状态,字数,翻译人,第一校对人,第二校对人,检查";
+
+        List<String> totalData = new ArrayList<>();
+        int index = 1;
         for (String name : people) {
+
+            System.out.println(name);
 
             List<String> personData = table.stream().filter(line -> line[FAN_YI_REN].contains(name)).map(line -> line[GONG_SI_AN_HAO] + "," + line[KE_HU_AN_HAO] + "," + line[JI_BEN_FA_LV_ZHUANG_TAI] + "," + line[ZI_SHU] + "," + name + ",,,").collect(Collectors.toList());
             personData.addAll(table.stream().filter(line -> line[DI_YI_JIAO_DUI_REN].contains(name)).map(line -> line[GONG_SI_AN_HAO] + "," + line[KE_HU_AN_HAO] + "," + line[JI_BEN_FA_LV_ZHUANG_TAI] + "," + line[ZI_SHU] + ",," + name + ",,").collect(Collectors.toList()));
@@ -101,12 +108,14 @@ public class StatisticCSV {
 
 //            personData.forEach(System.out::println);
 
-            int tran = table.stream().filter(line -> name.equals(line[FAN_YI_REN])).filter(line -> line[ZI_SHU].trim().length() > 0).map(line -> Integer.parseInt(line[ZI_SHU])).mapToInt(Integer::intValue).sum();
-            int v1 = table.stream().filter(line -> name.equals(line[DI_YI_JIAO_DUI_REN])).filter(line -> line[ZI_SHU].trim().length() > 0).map(line -> Integer.parseInt(line[ZI_SHU])).mapToInt(Integer::intValue).sum();
-            int v2 = table.stream().filter(line -> name.equals(line[DI_ER_JIAO_DUI_REN])).filter(line -> line[ZI_SHU].trim().length() > 0).map(line -> Integer.parseInt(line[ZI_SHU])).mapToInt(Integer::intValue).sum();
-            int check = table.stream().filter(line -> name.equals(line[JIAN_CHA])).filter(line -> line[ZI_SHU].trim().length() > 0).map(line -> Integer.parseInt(line[ZI_SHU])).mapToInt(Integer::intValue).sum();
+            int tran = table.stream().filter(line -> line[FAN_YI_REN].contains(name)).filter(line -> line[ZI_SHU].trim().length() > 0).map(line -> Integer.parseInt(line[ZI_SHU].trim())).mapToInt(Integer::intValue).sum();
+            int v1 = table.stream().filter(line -> line[DI_YI_JIAO_DUI_REN].contains(name)).filter(line -> line[ZI_SHU].trim().length() > 0).map(line -> Integer.parseInt(line[ZI_SHU].trim())).mapToInt(Integer::intValue).sum();
+            int v2 = table.stream().filter(line -> line[DI_ER_JIAO_DUI_REN].contains(name)).filter(line -> line[ZI_SHU].trim().length() > 0).map(line -> Integer.parseInt(line[ZI_SHU].trim())).mapToInt(Integer::intValue).sum();
+            int check = table.stream().filter(line -> line[JIAN_CHA].contains(name)).filter(line -> line[ZI_SHU].trim().length() > 0).map(line -> Integer.parseInt(line[ZI_SHU].trim())).mapToInt(Integer::intValue).sum();
 
-            String outPath = "/Users/robin/wangxp/6/" + name + ".csv";
+//            table.stream().filter(line -> line[JIAN_CHA].contains(name)).filter(line -> line[ZI_SHU].trim().length() > 0).map(line -> Integer.parseInt(line[ZI_SHU].trim())).forEach(System.out::println);
+
+            String outPath = DIRECTORY + "/" + name + ".csv";
 
             FileOutputStream fos = new FileOutputStream(outPath);
             wf(fos, header);
@@ -123,14 +132,24 @@ public class StatisticCSV {
             wf(fos, sCheck);
 
             fos.close();
-//            fw.close();
 
+
+            // add to total list
+            StringBuilder sb = new StringBuilder();
+            sb.append(index).append(",").append(name).append(",").append(tran).append(",").append(v1 + v2).append(",").append(check).append(",").append(",").append(",").append(tran + v1 + v2);
+            totalData.add(sb.toString());
+            index += 1;
         }
 
-        // stat
-//        for(String name: people)
+        String header_total = "序号,姓名,翻译字数,校对字数,检查字数,OA,撰写,翻译/校对合计";
+        String outPath = DIRECTORY + "/total.csv";
 
-
+        FileOutputStream fos = new FileOutputStream(outPath);
+        wf(fos, header_total);
+        for (String line : totalData) {
+            wf(fos, line);
+        }
+        fos.close();
     }
 
     private void wf(FileOutputStream fos, String s) throws Exception {
