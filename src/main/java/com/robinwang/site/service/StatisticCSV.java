@@ -27,8 +27,9 @@ public class StatisticCSV {
     private static int DI_YI_JIAO_DUI_REN = 8; //第一校对人
     private static int DI_ER_JIAO_DUI_REN = 9; //第二校对人
     private static int JIAN_CHA = 10; //检查
+    private static int QUAN_XIANG_ZI_SHU = 3;
 
-    private static String DIRECTORY = "/Users/robin/wangxp/8";
+    private static String DIRECTORY = "c:/wangxp/tmp/7";
 
     /**
      * May:
@@ -52,9 +53,10 @@ public class StatisticCSV {
      * 10: 检查
      */
     public void readCSV() throws Exception {
-        LOG.info("enter readCSV");
+        String filename = DIRECTORY + "/7.csv";
+        LOG.info("enter readCSV {}", filename);
 
-        Path path = new File(DIRECTORY + "/8.csv").toPath();
+        Path path = new File(filename).toPath();
         List<String> content = Files.readAllLines(path);
 
         ArrayList<String[]> table = new ArrayList<>(100);
@@ -72,22 +74,29 @@ public class StatisticCSV {
         GONG_SI_AN_HAO = mapName2Index.get("公司案号");
         KE_HU_AN_HAO = mapName2Index.get("客户案号");
         JI_BEN_FA_LV_ZHUANG_TAI = mapName2Index.get("基本法律状态");
+        QUAN_XIANG_ZI_SHU = mapName2Index.get("权项字数");
         ZI_SHU = mapName2Index.get("字数");
         FAN_YI_REN = mapName2Index.get("翻译人");
         DI_YI_JIAO_DUI_REN = mapName2Index.get("第一校对人");
         DI_ER_JIAO_DUI_REN = mapName2Index.get("第二校对人");
         JIAN_CHA = mapName2Index.get("检查");
 
+
         table.remove(0);
 
         Set<String> people = new HashSet<>();
+
+//        table.stream().forEach(line -> System.out.println(line[FAN_YI_REN]+"-"+line[GONG_SI_AN_HAO]+"-"+line[KE_HU_AN_HAO]+"-"+line[JI_BEN_FA_LV_ZHUANG_TAI]+"-"+line[ZI_SHU]));
+
+        table.stream().forEach(line -> System.out.println(line[FAN_YI_REN]));
+
         people.addAll(table.stream().map(line -> line[FAN_YI_REN].replaceAll("；", "、")).flatMap(x -> Arrays.stream(x.split("、"))).collect(Collectors.toSet()));
 
-        people.addAll(table.stream().map(line -> line[DI_YI_JIAO_DUI_REN]).flatMap(x -> Arrays.stream(x.split("、"))).collect(Collectors.toSet()));
+        people.addAll(table.stream().map(line -> line[DI_YI_JIAO_DUI_REN].replaceAll("；", "、")).flatMap(x -> Arrays.stream(x.split("、"))).collect(Collectors.toSet()));
 
-        people.addAll(table.stream().map(line -> line[DI_ER_JIAO_DUI_REN]).flatMap(x -> Arrays.stream(x.split("、"))).collect(Collectors.toSet()));
+        people.addAll(table.stream().map(line -> line[DI_ER_JIAO_DUI_REN].replaceAll("；", "、")).flatMap(x -> Arrays.stream(x.split("、"))).collect(Collectors.toSet()));
 
-        people.addAll(table.stream().map(line -> line[JIAN_CHA]).flatMap(x -> Arrays.stream(x.split("、"))).collect(Collectors.toSet()));
+        people.addAll(table.stream().map(line -> line[JIAN_CHA].replaceAll("；", "、")).flatMap(x -> Arrays.stream(x.split("、"))).collect(Collectors.toSet()));
 
         people = people.stream().map(String::trim).filter(x -> x.length() > 0).collect(Collectors.toSet());
 
